@@ -49,10 +49,6 @@
                                         'a', 'c', 'o', 'n', \
                                         '!'        
 
-// Fatbeacon service / characteristic UUIDs
-#define SERVICE_UUID                    "ae5946d4-e587-4ba8-b6a5-a97cca6affd3"
-#define CHARACTERISTIC_UUID             "d1a517f0-2499-46ca-9ccc-809bc1c966fa"
-
 #define DEAD_BEEF                       0xDEADBEEF                        /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
 #define APP_TIMER_PRESCALER             0                                 /**< Value of the RTC1 PRESCALER register. */
