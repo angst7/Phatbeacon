@@ -23,6 +23,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "ble_advdata.h"
+#include "ble_advertising.h"
 #include "nordic_common.h"
 #include "softdevice_handler.h"
 #include "bsp.h"
@@ -48,7 +49,7 @@
 #define APP_EDDYSTONE_URL_URL           'H', 'i', ' ', 'F', \
                                         'a', 't', 'b', 'e', \
                                         'a', 'c', 'o', 'n', \
-                                        '!'        
+                                        '!'
 
 #define STATIC_BORING_WEBPAGE '<', 'h', 't', 'm', 'l', '>', '<', 'h', 'e', 'a', 'd', '>', \
                               '<', 't', 'i', 't', 'l', 'e', '>', 'F', 'a', 't', 'b', 'e', \
@@ -79,7 +80,7 @@ static uint8_t eddystone_url_data[] =   /**< Information advertised by the Eddys
 static void fat_read_evt_handler(ble_fat_t* p_fat, uint16_t value_handle)
 {
     ret_code_t                            err_code;
-    ble_gatts_rw_authorize_reply_params_t reply;    
+    ble_gatts_rw_authorize_reply_params_t reply;
 
     static uint16_t last_data_pos = 0;
     uint8_t value_buffer[FAT_ADV_SLOT_CHAR_LENGTH_MAX] = {0};
@@ -102,7 +103,7 @@ static void fat_read_evt_handler(ble_fat_t* p_fat, uint16_t value_handle)
     last_data_pos += reply.params.read.len;
 
     err_code = sd_ble_gatts_rw_authorize_reply(value_handle, &reply);
-    APP_ERROR_CHECK(err_code);    
+    APP_ERROR_CHECK(err_code);
 }
 
 /**@brief Callback function for asserts in the SoftDevice.
@@ -173,7 +174,8 @@ static void advertising_start(void)
 {
     uint32_t err_code;
 
-    err_code = sd_ble_gap_adv_start(&m_adv_params);
+    //err_code = sd_ble_gap_adv_start(&m_adv_params);
+    err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
 
     err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
@@ -188,23 +190,23 @@ static void advertising_start(void)
 static void ble_stack_init(void)
 {
     uint32_t err_code;
-    
+
     nrf_clock_lf_cfg_t clock_lf_cfg = NRF_CLOCK_LFCLKSRC;
-    
+
     // Initialize the SoftDevice handler module.
     SOFTDEVICE_HANDLER_INIT(&clock_lf_cfg, NULL);
-    
+
     ble_enable_params_t ble_enable_params;
     err_code = softdevice_enable_get_default_config(CENTRAL_LINK_COUNT,
                                                     PERIPHERAL_LINK_COUNT,
                                                     &ble_enable_params);
     APP_ERROR_CHECK(err_code);
-    
+
     //ble_enable_params.common_enable_params.vs_uuid_count = 10;
 
     //Check the ram settings against the used number of links
     CHECK_RAM_START_ADDR(CENTRAL_LINK_COUNT,PERIPHERAL_LINK_COUNT);
-    
+
     // Enable BLE stack.
     err_code = softdevice_enable(&ble_enable_params);
     APP_ERROR_CHECK(err_code);
@@ -224,13 +226,14 @@ static void power_manage(void)
  */
 int main(void)
 {
-    uint32_t err_code;    
+    uint32_t err_code;
     ble_fat_init_t fat_init;
 
     // Initialize.
     APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
     err_code = bsp_init(BSP_INIT_LED, APP_TIMER_TICKS(100, APP_TIMER_PRESCALER), NULL);
     APP_ERROR_CHECK(err_code);
+
     ble_stack_init();
 
     memset(&fat_init, 0, sizeof(fat_init));
@@ -238,7 +241,7 @@ int main(void)
 
     err_code = ble_fat_init(&m_ble_fat, &fat_init);
     APP_ERROR_CHECK(err_code);
-    
+
     advertising_init();
     LEDS_ON(LEDS_MASK);
     // Start execution.

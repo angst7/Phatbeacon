@@ -3,7 +3,7 @@ PROJECT_NAME := experimental_ble_app_eddystone_s132_pca10040
 export OUTPUT_FILENAME
 #MAKEFILE_NAME := $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 MAKEFILE_NAME := $(MAKEFILE_LIST)
-MAKEFILE_DIR := $(dir $(MAKEFILE_NAME) ) 
+MAKEFILE_DIR := $(dir $(MAKEFILE_NAME) )
 
 NRF_SDK_PATH := $(HOME)/nRF5_SDK_11.0.0
 EXAMPLES_PATH = $(NRF_SDK_PATH)/examples
@@ -19,7 +19,7 @@ RM := rm -rf
 
 #echo suspend
 ifeq ("$(VERBOSE)","1")
-NO_ECHO := 
+NO_ECHO :=
 else
 NO_ECHO := @
 endif
@@ -63,6 +63,9 @@ $(abspath $(NRF_SDK_PATH)/components/ble/common/ble_conn_params.c) \
 $(abspath $(NRF_SDK_PATH)/components/ble/common/ble_srv_common.c) \
 $(abspath $(NRF_SDK_PATH)/components/toolchain/system_nrf52.c) \
 $(abspath $(NRF_SDK_PATH)/components/softdevice/common/softdevice_handler/softdevice_handler.c) \
+$(abspath $(NRF_SDK_PATH)/components/ble/ble_advertising/ble_advertising.c) \
+$(abspath $(NRF_SDK_PATH)/components/drivers_nrf/pstorage/pstorage.c) \
+$(abspath $(NRF_SDK_PATH)/components/libraries/fstorage/fstorage.c) \
 
 #assembly files common to all targets
 ASM_SOURCE_FILES  = $(abspath $(NRF_SDK_PATH)/components/toolchain/gcc/gcc_startup_nrf52.s)
@@ -91,6 +94,12 @@ INC_PATHS += -I$(abspath $(NRF_SDK_PATH)/components/softdevice/s132/headers/nrf5
 INC_PATHS += -I$(abspath $(NRF_SDK_PATH)/components/toolchain)
 INC_PATHS += -I$(abspath $(NRF_SDK_PATH)/components/drivers_nrf/hal)
 INC_PATHS += -I$(abspath $(NRF_SDK_PATH)/components/libraries/button)
+INC_PATHS += -I$(abspath $(NRF_SDK_PATH)/components/ble/ble_advertising)
+INC_PATHS += -I$(abspath $(NRF_SDK_PATH)/components/drivers_nrf/pstorage)
+INC_PATHS += -I$(abspath $(NRF_SDK_PATH)/components/drivers_nrf/pstorage/config)
+INC_PATHS += -I$(abspath $(NRF_SDK_PATH)/components/libraries/fstorage)
+INC_PATHS += -I$(abspath $(NRF_SDK_PATH)/components/libraries/fstorage/config)
+INC_PATHS += -I$(abspath $(NRF_SDK_PATH)/components/libraries/experimental_section_vars)
 
 OBJECT_DIRECTORY = _build
 LISTING_DIRECTORY = $(OBJECT_DIRECTORY)
@@ -128,7 +137,7 @@ CFLAGS += -Wall  -O3 -g3
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # keep every function in separate section. This will allow linker to dump unused functions
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
-CFLAGS += -fno-builtin --short-enums 
+CFLAGS += -fno-builtin --short-enums
 # keep every function in separate section. This will allow linker to dump unused functions
 LDFLAGS += -Xlinker -Map=$(LISTING_DIRECTORY)/$(OUTPUT_FILENAME).map
 LDFLAGS += -mthumb -mabi=aapcs -L $(TEMPLATE_PATH) -T$(LINKER_SCRIPT)
@@ -234,7 +243,7 @@ genbin:
 	$(NO_ECHO)$(OBJCOPY) -O binary $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).out $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).bin
 
 ## Create binary .hex file from the .out file
-genhex: 
+genhex:
 	@echo Preparing: $(OUTPUT_FILENAME).hex
 	$(NO_ECHO)$(OBJCOPY) -O ihex $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).out $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).hex
 echosize:
