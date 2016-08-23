@@ -57,6 +57,7 @@ $(abspath $(NRF_SDK_PATH)/components/drivers_nrf/gpiote/nrf_drv_gpiote.c) \
 $(abspath $(NRF_SDK_PATH)/components/drivers_nrf/uart/nrf_drv_uart.c) \
 $(abspath $(EXAMPLES_PATH)/bsp/bsp.c) \
 $(abspath ../../../main.c) \
+$(abspath ../../../ble_fat.c) \
 $(abspath $(NRF_SDK_PATH)/components/ble/common/ble_advdata.c) \
 $(abspath $(NRF_SDK_PATH)/components/ble/common/ble_conn_params.c) \
 $(abspath $(NRF_SDK_PATH)/components/ble/common/ble_srv_common.c) \
@@ -69,6 +70,7 @@ ASM_SOURCE_FILES  = $(abspath $(NRF_SDK_PATH)/components/toolchain/gcc/gcc_start
 #includes common to all targets
 INC_PATHS  = -I$(abspath ../../../config/experimental_ble_app_eddystone_s132_pca10040)
 INC_PATHS += -I$(abspath ../../../config)
+INC_PATHS += -I$(abspath ../../../)
 INC_PATHS += -I$(abspath $(NRF_SDK_PATH)/components/libraries/util)
 INC_PATHS += -I$(abspath $(NRF_SDK_PATH)/components/libraries/timer)
 INC_PATHS += -I$(abspath $(NRF_SDK_PATH)/components/drivers_nrf/uart)
@@ -122,7 +124,7 @@ CFLAGS += -DNRF52_PAN_62
 CFLAGS += -DNRF52_PAN_63
 CFLAGS += -mcpu=cortex-m4
 CFLAGS += -mthumb -mabi=aapcs --std=gnu99
-CFLAGS += -Wall -Werror -O3 -g3
+CFLAGS += -Wall  -O3 -g3
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # keep every function in separate section. This will allow linker to dump unused functions
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing

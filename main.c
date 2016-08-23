@@ -27,6 +27,7 @@
 #include "softdevice_handler.h"
 #include "bsp.h"
 #include "app_timer.h"
+#include "ble_fat.h"
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                 /**< Include the service changed characteristic. If not enabled, the server's database cannot be changed for the lifetime of the device. */
 
@@ -49,12 +50,21 @@
                                         'a', 'c', 'o', 'n', \
                                         '!'        
 
+#define STATIC_BORING_WEBPAGE '<', 'h', 't', 'm', 'l', '>', '<', 'h', 'e', 'a', 'd', '>', \
+                              '<', 't', 'i', 't', 'l', 'e', '>', 'F', 'a', 't', 'b', 'e', \
+                              'a', 'c', 'o', 'n', '<', '/', 't', 'i', 't', 'l', 'e', '>', \
+                              '<', '/', 'h', 'e', 'a', 'd', '>', '<', 'b', 'o', 'd', 'y', \
+                              '>', '<', 'h', '1', '>', 'I', 't', ' ', 'w', 'o', 'r', 'k', \
+                              'e', 'd', '!', '<', '/', 'h', '1', '>', '<', '/', 'b', 'o', \
+                              'd', 'y', '>', '<', '/', 'h', 't', 'm', 'l', '>'
+
 #define DEAD_BEEF                       0xDEADBEEF                        /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
 #define APP_TIMER_PRESCALER             0                                 /**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_OP_QUEUE_SIZE         4                                 /**< Size of timer operation queues. */
 
 static ble_gap_adv_params_t m_adv_params;                                 /**< Parameters to be passed to the stack when starting advertising. */
+static ble_fat_t            m_ble_fat;
 
 static uint8_t eddystone_url_data[] =   /**< Information advertised by the Eddystone URL frame type. */
 {
@@ -64,6 +74,36 @@ static uint8_t eddystone_url_data[] =   /**< Information advertised by the Eddys
     APP_EDDYSTONE_URL_URL           // URL with a maximum length of 17 bytes. Last byte is suffix (".com", ".org", etc.)
 };
 
+
+/**@brief handler for BLE fatbeacon read event */
+static void fat_read_evt_handler(ble_fat_t* p_fat, uint16_t value_handle)
+{
+    ret_code_t                            err_code;
+    ble_gatts_rw_authorize_reply_params_t reply;    
+
+    static uint16_t last_data_pos = 0;
+    uint8_t value_buffer[FAT_ADV_SLOT_CHAR_LENGTH_MAX] = {0};
+    uint8_t page_data[] = {STATIC_BORING_WEBPAGE};
+    ble_gatts_value_t value = {.len = sizeof(value_buffer), .offset = 0, .p_value = &(value_buffer[0])};
+
+    memset(&reply, 0, sizeof(reply));
+    //err_code = sd_ble_gatts_value_get(m_conn_handle, val_handle, &value);
+    //APP_ERROR_CHECK(err_code);
+
+    if (last_data_pos + FAT_ADV_SLOT_CHAR_LENGTH_MAX >= sizeof(page_data)) {
+        reply.params.read.len = sizeof(page_data) - last_data_pos;
+    } else {
+        reply.params.read.len = FAT_ADV_SLOT_CHAR_LENGTH_MAX;
+    }
+    reply.params.read.len = value.len;
+    reply.params.read.p_data = (const uint8_t *)page_data + last_data_pos;
+    reply.params.read.gatt_status = BLE_GATT_STATUS_SUCCESS;
+
+    last_data_pos += reply.params.read.len;
+
+    err_code = sd_ble_gatts_rw_authorize_reply(value_handle, &reply);
+    APP_ERROR_CHECK(err_code);    
+}
 
 /**@brief Callback function for asserts in the SoftDevice.
  *
@@ -160,6 +200,8 @@ static void ble_stack_init(void)
                                                     &ble_enable_params);
     APP_ERROR_CHECK(err_code);
     
+    //ble_enable_params.common_enable_params.vs_uuid_count = 10;
+
     //Check the ram settings against the used number of links
     CHECK_RAM_START_ADDR(CENTRAL_LINK_COUNT,PERIPHERAL_LINK_COUNT);
     
@@ -182,12 +224,21 @@ static void power_manage(void)
  */
 int main(void)
 {
-    uint32_t err_code;
+    uint32_t err_code;    
+    ble_fat_init_t fat_init;
+
     // Initialize.
     APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
     err_code = bsp_init(BSP_INIT_LED, APP_TIMER_TICKS(100, APP_TIMER_PRESCALER), NULL);
     APP_ERROR_CHECK(err_code);
     ble_stack_init();
+
+    memset(&fat_init, 0, sizeof(fat_init));
+    fat_init.read_evt_handler = fat_read_evt_handler;
+
+    err_code = ble_fat_init(&m_ble_fat, &fat_init);
+    APP_ERROR_CHECK(err_code);
+    
     advertising_init();
     LEDS_ON(LEDS_MASK);
     // Start execution.
