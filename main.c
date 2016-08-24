@@ -36,7 +36,9 @@
 #define PERIPHERAL_LINK_COUNT           0                                 /**< Number of peripheral links used by the application. When changing this number remember to adjust the RAM settings*/
 
 #define APP_CFG_NON_CONN_ADV_TIMEOUT    0                                 /**< Time for which the device must be advertising in non-connectable mode (in seconds). 0 disables the time-out. */
+#define APP_CFG_CONNECTABLE_ADV_TIMEOUT                 60  
 #define NON_CONNECTABLE_ADV_INTERVAL    MSEC_TO_UNITS(100, UNIT_0_625_MS) /**< The advertising interval for non-connectable advertisement (100 ms). This value can vary between 100 ms and 10.24 s). */
+#define APP_CFG_CONNECTABLE_ADV_INTERVAL_MS             100     
 
 // Eddystone common data
 #define APP_EDDYSTONE_UUID              0xFEAA                            /**< UUID for Eddystone beacons according to specification. */
@@ -130,9 +132,11 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 static void advertising_init(void)
 {
     uint32_t      err_code;
-    ble_advdata_t advdata;
+    ble_advdata_t adv_data;
+    ble_advdata_t scrsp_data;
     uint8_t       flags = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
     ble_uuid_t    adv_uuids[] = {{APP_EDDYSTONE_UUID, BLE_UUID_TYPE_BLE}};
+    ble_uuid_t    scrp_uuids[] = {{BLE_UUID_FAT_URL_SERVICE, m_ble_fat.uuid_type}};
 
     uint8_array_t eddystone_data_array;                             // Array for Service Data structure.
 /** @snippet [Eddystone data array] */
@@ -145,26 +149,34 @@ static void advertising_init(void)
     service_data.data = eddystone_data_array;                       // Array for service advertisement data.
 
     // Build and set advertising data.
-    memset(&advdata, 0, sizeof(advdata));
+    memset(&adv_data, 0, sizeof(adv_data));
 
-    advdata.name_type               = BLE_ADVDATA_NO_NAME;
-    advdata.flags                   = flags;
-    advdata.uuids_complete.uuid_cnt = sizeof(adv_uuids) / sizeof(adv_uuids[0]);
-    advdata.uuids_complete.p_uuids  = adv_uuids;
-    advdata.p_service_data_array    = &service_data;                // Pointer to Service Data structure.
-    advdata.service_data_count      = 1;
+    adv_data.name_type               = BLE_ADVDATA_NO_NAME;
+    adv_data.flags                   = flags;
+    adv_data.uuids_complete.uuid_cnt = sizeof(adv_uuids) / sizeof(adv_uuids[0]);
+    adv_data.uuids_complete.p_uuids  = adv_uuids;
+    adv_data.p_service_data_array    = &service_data;                // Pointer to Service Data structure.
+    adv_data.service_data_count      = 1;
 
-    err_code = ble_advdata_set(&advdata, NULL);
+    memset(&scrsp_data, 0, sizeof(scrsp_data));
+    scrsp_data.name_type            = BLE_ADVDATA_FULL_NAME;
+    scrsp_data.include_appearance   = false;
+    scrsp_data.uuids_complete.uuid_cnt = sizeof(scrp_uuids) / sizeof(scrp_uuids[0]);
+    scrsp_data.uuids_complete.p_uuids = scrp_uuids;
+
+    err_code = ble_advdata_set(&adv_data, &scrsp_data);
     APP_ERROR_CHECK(err_code);
 
     // Initialize advertising parameters (used when starting advertising).
     memset(&m_adv_params, 0, sizeof(m_adv_params));
 
-    m_adv_params.type        = BLE_GAP_ADV_TYPE_ADV_NONCONN_IND;
-    m_adv_params.p_peer_addr = NULL;                                // Undirected advertisement.
-    m_adv_params.fp          = BLE_GAP_ADV_FP_ANY;
-    m_adv_params.interval    = NON_CONNECTABLE_ADV_INTERVAL;
-    m_adv_params.timeout     = APP_CFG_NON_CONN_ADV_TIMEOUT;
+    m_adv_params.type        = BLE_GAP_ADV_TYPE_ADV_IND;
+    //m_adv_params.p_peer_addr = NULL;                                // Undirected advertisement.
+    //m_adv_params.fp          = BLE_GAP_ADV_FP_ANY;
+    //m_adv_params.interval    = NON_CONNECTABLE_ADV_INTERVAL;
+    //m_adv_params.timeout     = APP_CFG_NON_CONN_ADV_TIMEOUT;
+    m_adv_params.interval    = MSEC_TO_UNITS(APP_CFG_CONNECTABLE_ADV_INTERVAL_MS, UNIT_0_625_MS);
+    m_adv_params.timeout     = APP_CFG_CONNECTABLE_ADV_TIMEOUT;
 }
 
 
@@ -174,8 +186,8 @@ static void advertising_start(void)
 {
     uint32_t err_code;
 
-    //err_code = sd_ble_gap_adv_start(&m_adv_params);
-    err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
+    err_code = sd_ble_gap_adv_start(&m_adv_params);
+    //err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
 
     err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
