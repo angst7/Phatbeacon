@@ -100,7 +100,7 @@ static uint32_t fat_url_char_add(ble_fat_t * p_fat, const ble_fat_init_t * p_fat
     char_md.p_char_user_desc         = NULL;
     char_md.p_char_pf                = NULL;
     char_md.p_user_desc_md           = NULL;
-    char_md.p_cccd_md                = NULL; //&cccd_md;
+    char_md.p_cccd_md                = NULL; // &cccd_md;
     char_md.p_sccd_md                = NULL;
 
     ble_uuid.type = p_fat->char_uuid_type;
@@ -124,10 +124,10 @@ static uint32_t fat_url_char_add(ble_fat_t * p_fat, const ble_fat_init_t * p_fat
 
     attr_char_value.p_uuid    = &ble_uuid;
     attr_char_value.p_attr_md = &attr_md;
-    attr_char_value.init_len  = 82;
+    attr_char_value.init_len  = 17;
     attr_char_value.init_offs = 0;
     attr_char_value.p_value   = p_fat->val_data; //(uint8_t *)(&temp);
-    attr_char_value.max_len   = 82;
+    attr_char_value.max_len   = 17;
 
     return sd_ble_gatts_characteristic_add(p_fat->service_handle,
                                            &char_md,

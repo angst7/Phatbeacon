@@ -46,10 +46,12 @@
 #define MAX_CONN_INTERVAL                               MSEC_TO_UNITS(90, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (75 ms), Connection interval uses 1.25 ms units. */
 #define SLAVE_LATENCY                                   0                                           /**< Slave latency. */
 #define CONN_SUP_TIMEOUT                                MSEC_TO_UNITS(4000, UNIT_10_MS)             /**< Connection supervisory timeout (4 seconds), Supervision Timeout uses 10 ms units. */
+
 #define FIRST_CONN_PARAMS_UPDATE_DELAY                  APP_TIMER_TICKS(5000, APP_TIMER_PRESCALER)  /**< Time from initiating event (connect or start of notification) to first time sd_ble_gap_conn_param_update is called (5 seconds). */
 #define NEXT_CONN_PARAMS_UPDATE_DELAY                   APP_TIMER_TICKS(30000, APP_TIMER_PRESCALER) /**< Time between each call to sd_ble_gap_conn_param_update after the first call (30 seconds). */
 #define MAX_CONN_PARAMS_UPDATE_COUNT                    3                                           /**< Number of attempts before giving up the connection parameter negotiation. */
 
+#define DEVICE_NAME                     "PhatBeacon"
 
 // Eddystone common data
 #define APP_EDDYSTONE_UUID              0xFEAA                            /**< UUID for Eddystone beacons according to specification. */
@@ -63,11 +65,11 @@
                                         'a', 't', 'b', 'e', \
                                         'a', 'c', 'o', 'n', \
                                         '!'
-/*
-#define STATIC_BORING_WEBPAGE 'H', 'e', 'l', 'l', 'o', ' ', 'f', 'r', 'o', 'm', ' ', 'a', \
-                              'P', 'h', 'a', 't', 'B', 'e', 'a', 'c', 'o', 'n'
-*/
 
+#define STATIC_BORING_WEBPAGE '<', 'H', '1', '>', 'H', 'i', ' ', 'T', 'h', 'e', 'r', 'e', \
+                              '!', '<', '/', 'H', '1', '>'
+
+/*
 #define STATIC_BORING_WEBPAGE '<', 'h', 't', 'm', 'l', '>', '<', 'h', 'e', 'a', 'd', '>', \
                               '<', 't', 'i', 't', 'l', 'e', '>', 'F', 'a', 't', 'b', 'e', \
                               'a', 'c', 'o', 'n', '<', '/', 't', 'i', 't', 'l', 'e', '>', \
@@ -75,7 +77,7 @@
                               '>', '<', 'h', '1', '>', 'I', 't', ' ', 'w', 'o', 'r', 'k', \
                               'e', 'd', '!', '<', '/', 'h', '1', '>', '<', '/', 'b', 'o', \
                               'd', 'y', '>', '<', '/', 'h', 't', 'm', 'l', '>'
-
+*/
 #define DEAD_BEEF                       0xDEADBEEF                        /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
 #define APP_TIMER_PRESCALER             0                                 /**< Value of the RTC1 PRESCALER register. */
@@ -84,19 +86,24 @@
 static ble_gap_adv_params_t m_adv_params;                                 /**< Parameters to be passed to the stack when starting advertising. */
 static ble_fat_t            m_ble_fat;
 static uint8_t              m_page_data[] = {STATIC_BORING_WEBPAGE};
+static uint16_t             m_conn_handle = BLE_CONN_HANDLE_INVALID;
 
 static uint8_t eddystone_url_data[] =   /**< Information advertised by the Eddystone URL frame type. */
 {
     APP_EDDYSTONE_URL_FRAME_TYPE,   // Eddystone URL frame type.
     APP_EDDYSTONE_RSSI,             // RSSI value at 0 m.
-    APP_FATBEACON_URI,             // Scheme or prefix for URL Fatbeacon
+    APP_FATBEACON_URI,              // Scheme or prefix for URL Fatbeacon
     APP_EDDYSTONE_URL_URL           // URL with a maximum length of 17 bytes. Last byte is suffix (".com", ".org", etc.)
 };
+
+static void advertising_start(void);
 
 
 /**@brief handler for BLE fatbeacon read event */
 static void fat_read_evt_handler(ble_fat_t* p_fat, uint16_t value_handle)
 {
+    SEGGER_RTT_printf(0, "I'm in the read evt handler.\n");
+    /*
     ret_code_t                            err_code;
     ble_gatts_rw_authorize_reply_params_t reply;
 
@@ -108,7 +115,7 @@ static void fat_read_evt_handler(ble_fat_t* p_fat, uint16_t value_handle)
     SEGGER_RTT_printf(0, "I'm in the read evt handler.\n");
 
     memset(&reply, 0, sizeof(reply));
-    //err_code = sd_ble_gatts_value_get(m_conn_handle, value_handle, &value);
+    err_code = sd_ble_gatts_value_get(m_conn_handle, value_handle, &value);
     if (err_code != NRF_SUCCESS) {
         SEGGER_RTT_printf(0, "GATT Value Error %d\n", err_code);
     }
@@ -124,16 +131,60 @@ static void fat_read_evt_handler(ble_fat_t* p_fat, uint16_t value_handle)
 
     last_data_pos += reply.params.read.len;
 
-    //err_code = sd_ble_gatts_rw_authorize_reply(value_handle, &reply);
+    err_code = sd_ble_gatts_rw_authorize_reply(value_handle, &reply);
     if (err_code != NRF_SUCCESS) {
         SEGGER_RTT_printf(0, "GATT Reply Error %d\n", err_code);
+    }
+    */
+}
+
+static void on_ble_evt(ble_evt_t * p_ble_evt)
+{
+    //uint32_t err_code;
+
+    switch (p_ble_evt->header.evt_id)
+            {
+        case BLE_GAP_EVT_CONNECTED:            
+            m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+            SEGGER_RTT_printf(0,"Got BLE Connection. Handle: %d\n", m_conn_handle);
+            break;
+
+        case BLE_GAP_EVT_DISCONNECTED:
+            SEGGER_RTT_printf(0,"BLE Handle: %d Disconnected.\n", m_conn_handle);
+            m_conn_handle = BLE_CONN_HANDLE_INVALID;
+
+            // Start the advertising back up
+            advertising_start();
+            break;
+
+        case BLE_GAP_EVT_TIMEOUT:
+            advertising_start();
+            break;
+
+        default:
+            // No implementation needed.
+            break;
     }
 }
 
 static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
+    SEGGER_RTT_printf(0,"Got BLE Event. Id: %d\n", p_ble_evt->header.evt_id);
     ble_conn_params_on_ble_evt(p_ble_evt);
+    on_ble_evt(p_ble_evt);
     ble_advertising_on_ble_evt(p_ble_evt);
+}
+
+/**@brief Function for dispatching a system event to interested modules.
+ *
+ * @details This function is called from the System event interrupt handler after a system
+ *          event has been received.
+ *
+ * @param[in] sys_evt  System stack event.
+ */
+static void sys_evt_dispatch(uint32_t sys_evt)
+{
+    ble_advertising_on_sys_evt(sys_evt);
 }
 
 static void gap_params_init(void)
@@ -142,13 +193,14 @@ static void gap_params_init(void)
    ble_gap_conn_params_t   gap_conn_params;
    ble_gap_conn_sec_mode_t sec_mode;
 
-   uint8_t                 device_name[] = "PhatB";
-
    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&sec_mode);
 
    err_code = sd_ble_gap_device_name_set(&sec_mode,
-                                         device_name,
-                                         strlen((const char *)device_name));
+                                         (const uint8_t *)DEVICE_NAME,
+                                         strlen(DEVICE_NAME));
+   APP_ERROR_CHECK(err_code);
+
+   err_code = sd_ble_gap_appearance_set(BLE_APPEARANCE_GENERIC_TAG);
    APP_ERROR_CHECK(err_code);
 
    memset(&gap_conn_params, 0, sizeof(gap_conn_params));
@@ -175,7 +227,7 @@ static void conn_params_init(void)
     cp_init.next_conn_params_update_delay  = NEXT_CONN_PARAMS_UPDATE_DELAY;
     cp_init.max_conn_params_update_count   = MAX_CONN_PARAMS_UPDATE_COUNT;
     cp_init.start_on_notify_cccd_handle    = BLE_GATT_HANDLE_INVALID;
-    cp_init.disconnect_on_fail             = false;
+    cp_init.disconnect_on_fail             = true;
 
     err_code = ble_conn_params_init(&cp_init);
     APP_ERROR_CHECK(err_code);
@@ -288,7 +340,7 @@ static void ble_stack_init(void)
                                                     PERIPHERAL_LINK_COUNT,
                                                     &ble_enable_params);
     if (err_code != NRF_SUCCESS) {
-        SEGGER_RTT_printf(0, "Error %d\n", err_code);
+        SEGGER_RTT_printf(0, "Softdevice getcfg Error %d\n", err_code);
     }
     //APP_ERROR_CHECK(err_code);
 
@@ -300,12 +352,18 @@ static void ble_stack_init(void)
     // Enable BLE stack.
     err_code = softdevice_enable(&ble_enable_params);
     if (err_code != NRF_SUCCESS) {
-        SEGGER_RTT_printf(0, "Error %d\n", err_code);
+        SEGGER_RTT_printf(0, "Softlink Enable Error %d\n", err_code);
     }
     //APP_ERROR_CHECK(err_code);
 
-    softdevice_ble_evt_handler_set(ble_evt_dispatch);
-    softdevice_sys_evt_handler_set(ble_evt_dispatch);
+    err_code = softdevice_ble_evt_handler_set(ble_evt_dispatch);
+    if (err_code != NRF_SUCCESS) {
+        SEGGER_RTT_printf(0, "Softdevice bleevt handler set Error %d\n", err_code);
+    }
+    err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
+    if (err_code != NRF_SUCCESS) {
+        SEGGER_RTT_printf(0, "Softdevice sysevt handler set Error %d\n", err_code);
+    }
 }
 
 
