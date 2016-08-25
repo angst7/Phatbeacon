@@ -1,6 +1,7 @@
 #include "ble_fat.h"
 #include <string.h>
 #include "endian_convert.h"
+#include "SEGGER_RTT.h"
 
 
 /**@brief Function for handling the @ref BLE_GAP_EVT_CONNECTED event from the S132 SoftDevice.
@@ -99,10 +100,10 @@ static uint32_t fat_url_char_add(ble_fat_t * p_fat, const ble_fat_init_t * p_fat
     char_md.p_char_user_desc         = NULL;
     char_md.p_char_pf                = NULL;
     char_md.p_user_desc_md           = NULL;
-    char_md.p_cccd_md                = &cccd_md;
+    char_md.p_cccd_md                = NULL; //&cccd_md;
     char_md.p_sccd_md                = NULL;
 
-    ble_uuid.type = p_fat->uuid_type;
+    ble_uuid.type = p_fat->char_uuid_type;
     ble_uuid.uuid = BLE_UUID_FAT_URL_CHAR;
 
     memset(&attr_md, 0, sizeof(attr_md));
@@ -123,10 +124,10 @@ static uint32_t fat_url_char_add(ble_fat_t * p_fat, const ble_fat_init_t * p_fat
 
     attr_char_value.p_uuid    = &ble_uuid;
     attr_char_value.p_attr_md = &attr_md;
-    attr_char_value.init_len  = 1;
+    attr_char_value.init_len  = 82;
     attr_char_value.init_offs = 0;
-    attr_char_value.p_value   = NULL; //(uint8_t *)(&temp);
-    attr_char_value.max_len   = 1;
+    attr_char_value.p_value   = p_fat->val_data; //(uint8_t *)(&temp);
+    attr_char_value.max_len   = 82;
 
     return sd_ble_gatts_characteristic_add(p_fat->service_handle,
                                            &char_md,
@@ -145,22 +146,12 @@ uint32_t ble_fat_init(ble_fat_t * p_fat, const ble_fat_init_t * p_fat_init)
     // Initialize the service structure.
     p_fat->conn_handle                        = BLE_CONN_HANDLE_INVALID;
     p_fat->read_evt_handler                   = p_fat_init->read_evt_handler;
+    p_fat->val_data                           = p_fat_init->val_data;
 
     // Add a custom base service UUID.
     err_code = sd_ble_uuid_vs_add(&fat_base_uuid, &p_fat->uuid_type);
-    if (err_code != NRF_SUCCESS)
-    {
-    		return err_code;
-    }
-
-    // Add a custom base characteristic UUID.
-    //err_code = sd_ble_uuid_vs_add(&fat_char_base_uuid, &p_fat->char_uuid_type);
-    if (err_code != NRF_SUCCESS)
-    {
-        if (err_code == NRF_ERROR_NO_MEM)
-            err_code = NRF_SUCCESS;
-        else    
-    		return err_code;
+    if (err_code != NRF_SUCCESS) {
+        SEGGER_RTT_printf(0, "UUID vs Add S Error %d\n", err_code);
     }
 
     ble_uuid.type = p_fat->uuid_type;
@@ -170,18 +161,19 @@ uint32_t ble_fat_init(ble_fat_t * p_fat, const ble_fat_init_t * p_fat_init)
     err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY,
                                         &ble_uuid,
                                         &p_fat->service_handle);
-    if (err_code != NRF_SUCCESS)
-    {
-    		return err_code;
+    if (err_code != NRF_SUCCESS) {
+        SEGGER_RTT_printf(0, "GATTS Svc add Error %d\n", err_code);
     }
 
-    //err_code = fat_url_char_add(p_fat, p_fat_init);
-    if (err_code != NRF_SUCCESS)
-    {
-    	if (err_code == NRF_ERROR_INVALID_PARAM)
-            err_code = NRF_SUCCESS;
-        else    
-    		return err_code;
+    // Add a custom base characteristic UUID.
+    err_code = sd_ble_uuid_vs_add(&fat_char_base_uuid, &p_fat->char_uuid_type);
+    if (err_code != NRF_SUCCESS) {
+        SEGGER_RTT_printf(0, "UUID vs Add C Error %d\n", err_code);
+    }
+
+    err_code = fat_url_char_add(p_fat, p_fat_init);
+    if (err_code != NRF_SUCCESS) {
+        SEGGER_RTT_printf(0, "Fatbeacon char add Error %d\n", err_code);
     }
 
     return NRF_SUCCESS;

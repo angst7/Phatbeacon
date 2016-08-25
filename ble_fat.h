@@ -42,6 +42,7 @@ typedef PACKED(struct)
 typedef struct
 {
     ble_fat_read_evt_handler_t      read_evt_handler;   /**< Event handler to be called for authorizing read requests. */
+    uint8_t*                        val_data;
 } ble_fat_init_t;
 
 struct ble_fat_s
@@ -52,6 +53,7 @@ struct ble_fat_s
     ble_gatts_char_handles_t        fat_url_handles;              /**< Handles related to the fatbeacon_url characteristic */
     uint16_t                        conn_handle;                  /**< Handle of the current connection (as provided by the S132 SoftDevice). BLE_CONN_HANDLE_INVALID if not in a connection. */    
     ble_fat_read_evt_handler_t      read_evt_handler;             /**< Event handler to be called for handling read attempts. */
+    uint8_t*                        val_data;
 };
 
 uint32_t ble_fat_init(ble_fat_t * p_fat, const ble_fat_init_t * p_fat_init);
