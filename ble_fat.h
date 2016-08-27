@@ -11,7 +11,7 @@
 #define BLE_UUID_FAT_URL_SERVICE    0x46D4
 #define BLE_UUID_FAT_URL_CHAR       0x17F0
 
-#define FAT_ADV_SLOT_CHAR_LENGTH_MAX                      (34)
+#define FAT_CHAR_MAX_LEN            (20)
 
 /*Forward Declaration of of ble_fat_t type*/
 typedef struct ble_fat_s ble_fat_t;

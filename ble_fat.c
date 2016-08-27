@@ -112,7 +112,7 @@ static uint32_t fat_url_char_add(ble_fat_t * p_fat, const ble_fat_init_t * p_fat
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&attr_md.write_perm);
 
     attr_md.vloc    = BLE_GATTS_VLOC_STACK;
-    attr_md.rd_auth = 0;
+    attr_md.rd_auth = 1;
     attr_md.wr_auth = 0;
     attr_md.vlen    = 0;
 
@@ -124,10 +124,10 @@ static uint32_t fat_url_char_add(ble_fat_t * p_fat, const ble_fat_init_t * p_fat
 
     attr_char_value.p_uuid    = &ble_uuid;
     attr_char_value.p_attr_md = &attr_md;
-    attr_char_value.init_len  = 17;
+    attr_char_value.init_len  = 1;
     attr_char_value.init_offs = 0;
     attr_char_value.p_value   = p_fat->val_data; //(uint8_t *)(&temp);
-    attr_char_value.max_len   = 17;
+    attr_char_value.max_len   = 20;
 
     return sd_ble_gatts_characteristic_add(p_fat->service_handle,
                                            &char_md,

@@ -65,11 +65,11 @@
                                         'a', 't', 'b', 'e', \
                                         'a', 'c', 'o', 'n', \
                                         '!'
-
+/*
 #define STATIC_BORING_WEBPAGE '<', 'H', '1', '>', 'H', 'i', ' ', 'T', 'h', 'e', 'r', 'e', \
                               '!', '<', '/', 'H', '1', '>'
+*/
 
-/*
 #define STATIC_BORING_WEBPAGE '<', 'h', 't', 'm', 'l', '>', '<', 'h', 'e', 'a', 'd', '>', \
                               '<', 't', 'i', 't', 'l', 'e', '>', 'F', 'a', 't', 'b', 'e', \
                               'a', 'c', 'o', 'n', '<', '/', 't', 'i', 't', 'l', 'e', '>', \
@@ -77,7 +77,7 @@
                               '>', '<', 'h', '1', '>', 'I', 't', ' ', 'w', 'o', 'r', 'k', \
                               'e', 'd', '!', '<', '/', 'h', '1', '>', '<', '/', 'b', 'o', \
                               'd', 'y', '>', '<', '/', 'h', 't', 'm', 'l', '>'
-*/
+
 #define DEAD_BEEF                       0xDEADBEEF                        /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
 #define APP_TIMER_PRESCALER             0                                 /**< Value of the RTC1 PRESCALER register. */
@@ -103,39 +103,56 @@ static void advertising_start(void);
 static void fat_read_evt_handler(ble_fat_t* p_fat, uint16_t value_handle)
 {
     SEGGER_RTT_printf(0, "I'm in the read evt handler.\n");
-    /*
+    
     ret_code_t                            err_code;
     ble_gatts_rw_authorize_reply_params_t reply;
 
-    static uint16_t last_data_pos = 0;
-    uint8_t value_buffer[FAT_ADV_SLOT_CHAR_LENGTH_MAX] = {0};
+    static int16_t last_data_pos = 0;
+    uint8_t value_buffer[FAT_CHAR_MAX_LEN] = {0};
     
     ble_gatts_value_t value = {.len = sizeof(value_buffer), .offset = 0, .p_value = &(value_buffer[0])};
 
-    SEGGER_RTT_printf(0, "I'm in the read evt handler.\n");
-
     memset(&reply, 0, sizeof(reply));
+    reply.type = BLE_GATTS_AUTHORIZE_TYPE_READ;
+
     err_code = sd_ble_gatts_value_get(m_conn_handle, value_handle, &value);
     if (err_code != NRF_SUCCESS) {
         SEGGER_RTT_printf(0, "GATT Value Error %d\n", err_code);
     }
 
-    if (last_data_pos + FAT_ADV_SLOT_CHAR_LENGTH_MAX >= sizeof(m_page_data)) {
-        reply.params.read.len = sizeof(m_page_data) - last_data_pos;
-    } else {
-        reply.params.read.len = FAT_ADV_SLOT_CHAR_LENGTH_MAX;
+    if (last_data_pos >= 0) // Active request
+    {
+        if (last_data_pos + FAT_CHAR_MAX_LEN >= sizeof(m_page_data)) {
+            reply.params.read.len = sizeof(m_page_data) - last_data_pos;
+        } else {
+            reply.params.read.len = FAT_CHAR_MAX_LEN;
+        }
+
+        reply.params.read.p_data      = (const uint8_t *)m_page_data + last_data_pos;        
+        reply.params.read.update      = 1;
+        reply.params.read.offset      = 0;
+        reply.params.read.gatt_status = BLE_GATT_STATUS_SUCCESS;
+
+        if (last_data_pos + FAT_CHAR_MAX_LEN < sizeof(m_page_data)) {
+            last_data_pos += reply.params.read.len;
+        } else {
+            last_data_pos = -1;
+        }
+    } else {    // Send empty response as last packet
+        reply.params.read.p_data      = NULL;
+        reply.params.read.len         = 0;
+        reply.params.read.update      = 1;
+        reply.params.read.offset      = 0;
+        reply.params.read.gatt_status = BLE_GATT_STATUS_SUCCESS;
+        last_data_pos = 0; 
     }
-    reply.params.read.len = value.len;
-    reply.params.read.p_data = (const uint8_t *)m_page_data + last_data_pos;
-    reply.params.read.gatt_status = BLE_GATT_STATUS_SUCCESS;
 
-    last_data_pos += reply.params.read.len;
-
-    err_code = sd_ble_gatts_rw_authorize_reply(value_handle, &reply);
+    SEGGER_RTT_printf(0, "Reply Char len: %d at: 0x%x offset: %d\n", reply.params.read.len, m_page_data, last_data_pos);
+    err_code = sd_ble_gatts_rw_authorize_reply(m_conn_handle, &reply);
     if (err_code != NRF_SUCCESS) {
         SEGGER_RTT_printf(0, "GATT Reply Error %d\n", err_code);
     }
-    */
+    
 }
 
 static void on_ble_evt(ble_evt_t * p_ble_evt)
@@ -171,6 +188,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
     SEGGER_RTT_printf(0,"Got BLE Event. Id: %d\n", p_ble_evt->header.evt_id);
     ble_conn_params_on_ble_evt(p_ble_evt);
+    ble_fat_on_ble_evt(&m_ble_fat, p_ble_evt);
     on_ble_evt(p_ble_evt);
     ble_advertising_on_ble_evt(p_ble_evt);
 }
@@ -184,6 +202,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
  */
 static void sys_evt_dispatch(uint32_t sys_evt)
 {
+    SEGGER_RTT_printf(0,"Got SYS Event. Id: %d\n", sys_evt);
     ble_advertising_on_sys_evt(sys_evt);
 }
 
