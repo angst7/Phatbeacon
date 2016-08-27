@@ -20,19 +20,6 @@ typedef void (*ble_fat_read_evt_handler_t) ( ble_fat_t *                p_fat,
                                              uint16_t                   value_handle
                                              );
 
-/**@brief struct for data fields in Broadcast Capabilities characteristic*/
-/*
-typedef PACKED(struct)
-{
-    int8_t     vers_byte;
-    int8_t     max_supp_total_slots;
-    int8_t     max_supp_eid_slots;
-    int8_t     cap_bitfield;
-    int16_t    supp_frame_types;
-    int8_t     supp_radio_tx_power[ECS_NUM_OF_SUPORTED_TX_POWER];
-} ble_fat_brdcst_cap_t;
-*/
-
 /**@brief Fatbeacon URL Service initialization structure.
 *
 * @details This structure contains the initialization information for the service. The application

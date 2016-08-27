@@ -5,6 +5,7 @@ export OUTPUT_FILENAME
 MAKEFILE_NAME := $(MAKEFILE_LIST)
 MAKEFILE_DIR := $(dir $(MAKEFILE_NAME) )
 
+# Set your NRF_SDK_PATH location here
 NRF_SDK_PATH := $(HOME)/nRF5_SDK_11.0.0
 EXAMPLES_PATH = $(NRF_SDK_PATH)/examples
 TEMPLATE_PATH = $(NRF_SDK_PATH)/components/toolchain/gcc
@@ -56,8 +57,8 @@ $(abspath $(NRF_SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c) \
 $(abspath $(NRF_SDK_PATH)/components/drivers_nrf/gpiote/nrf_drv_gpiote.c) \
 $(abspath $(NRF_SDK_PATH)/components/drivers_nrf/uart/nrf_drv_uart.c) \
 $(abspath $(EXAMPLES_PATH)/bsp/bsp.c) \
-$(abspath ../../../main.c) \
-$(abspath ../../../ble_fat.c) \
+$(abspath ../../main.c) \
+$(abspath ../../ble_fat.c) \
 $(abspath $(NRF_SDK_PATH)/components/ble/common/ble_advdata.c) \
 $(abspath $(NRF_SDK_PATH)/components/ble/common/ble_conn_params.c) \
 $(abspath $(NRF_SDK_PATH)/components/ble/common/ble_srv_common.c) \
@@ -71,9 +72,9 @@ $(abspath $(NRF_SDK_PATH)/components/libraries/fstorage/fstorage.c) \
 ASM_SOURCE_FILES  = $(abspath $(NRF_SDK_PATH)/components/toolchain/gcc/gcc_startup_nrf52.s)
 
 #includes common to all targets
-INC_PATHS  = -I$(abspath ../../../config/experimental_ble_app_eddystone_s132_pca10040)
-INC_PATHS += -I$(abspath ../../../config)
-INC_PATHS += -I$(abspath ../../../)
+INC_PATHS  = -I$(abspath ../../config/experimental_ble_app_eddystone_s132_pca10040)
+INC_PATHS += -I$(abspath ../../config)
+INC_PATHS += -I$(abspath ../../)
 INC_PATHS += -I$(abspath $(NRF_SDK_PATH)/components/libraries/util)
 INC_PATHS += -I$(abspath $(NRF_SDK_PATH)/components/libraries/timer)
 INC_PATHS += -I$(abspath $(NRF_SDK_PATH)/components/drivers_nrf/uart)

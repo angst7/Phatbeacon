@@ -42,25 +42,25 @@
 #define NON_CONNECTABLE_ADV_INTERVAL            MSEC_TO_UNITS(100, UNIT_0_625_MS) /**< The advertising interval for non-connectable advertisement (100 ms). This value can vary between 100 ms and 10.24 s). */
 #define APP_CFG_CONNECTABLE_ADV_INTERVAL_MS     100     
 
-#define MIN_CONN_INTERVAL                               MSEC_TO_UNITS(50, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
-#define MAX_CONN_INTERVAL                               MSEC_TO_UNITS(90, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (75 ms), Connection interval uses 1.25 ms units. */
-#define SLAVE_LATENCY                                   0                                           /**< Slave latency. */
-#define CONN_SUP_TIMEOUT                                MSEC_TO_UNITS(4000, UNIT_10_MS)             /**< Connection supervisory timeout (4 seconds), Supervision Timeout uses 10 ms units. */
+#define MIN_CONN_INTERVAL                       MSEC_TO_UNITS(50, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
+#define MAX_CONN_INTERVAL                       MSEC_TO_UNITS(90, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (75 ms), Connection interval uses 1.25 ms units. */
+#define SLAVE_LATENCY                           0                                           /**< Slave latency. */
+#define CONN_SUP_TIMEOUT                        MSEC_TO_UNITS(4000, UNIT_10_MS)             /**< Connection supervisory timeout (4 seconds), Supervision Timeout uses 10 ms units. */
 
-#define FIRST_CONN_PARAMS_UPDATE_DELAY                  APP_TIMER_TICKS(5000, APP_TIMER_PRESCALER)  /**< Time from initiating event (connect or start of notification) to first time sd_ble_gap_conn_param_update is called (5 seconds). */
-#define NEXT_CONN_PARAMS_UPDATE_DELAY                   APP_TIMER_TICKS(30000, APP_TIMER_PRESCALER) /**< Time between each call to sd_ble_gap_conn_param_update after the first call (30 seconds). */
-#define MAX_CONN_PARAMS_UPDATE_COUNT                    3                                           /**< Number of attempts before giving up the connection parameter negotiation. */
+#define FIRST_CONN_PARAMS_UPDATE_DELAY          APP_TIMER_TICKS(5000, APP_TIMER_PRESCALER)  /**< Time from initiating event (connect or start of notification) to first time sd_ble_gap_conn_param_update is called (5 seconds). */
+#define NEXT_CONN_PARAMS_UPDATE_DELAY           APP_TIMER_TICKS(30000, APP_TIMER_PRESCALER) /**< Time between each call to sd_ble_gap_conn_param_update after the first call (30 seconds). */
+#define MAX_CONN_PARAMS_UPDATE_COUNT            3                                           /**< Number of attempts before giving up the connection parameter negotiation. */
 
 #define DEVICE_NAME                     "PhatBeacon"
 
 // Eddystone common data
 #define APP_EDDYSTONE_UUID              0xFEAA                            /**< UUID for Eddystone beacons according to specification. */
 #define APP_EDDYSTONE_RSSI              0xEE                              /**< 0xEE = -18 dB is the approximate signal strength at 0 m. */
-#define APP_FATBEACON_URI               0x0E
+#define APP_FATBEACON_URI               0x0E                              /** 0x0E is the URL scheme for Fatbeacon */
 
 // Eddystone URL data
 #define APP_EDDYSTONE_URL_FRAME_TYPE    0x10                              /**< URL Frame type is fixed at 0x10. */
-#define APP_EDDYSTONE_URL_SCHEME        0x00                              /**< 0x00 = "http://www" URL prefix scheme according to specification. */
+
 #define APP_EDDYSTONE_URL_URL           'E', 'd', 'd', 'y', \
                                         's', 't', 'o', 'n', \
                                         'e', ' ', 'L', 'i', \
@@ -80,7 +80,7 @@
                               "<p>The Eddystone Lighthouse is on the dangerous Eddystone Rocks"\
                               ", 9 statute miles (14 km) south of Rame Head, England, United"\
                               " Kingdom. While Rame Head is in Cornwall, the rocks are in"\
-                              " Devon and composed of Precambrian gneiss.</p>"\ 
+                              " Devon and composed of Precambrian gneiss.</p>"\
                               "<img alt=\"Winstanley's lighthouse\" align=\"left\" src=\"data:image/jpeg;base64,"\
                               "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAFA3PEY8MlBGQUZaVVBfeMiCeG5uePWvuZHI"\
                               "////////////////////////////////////////////////////wgALCAGbASwBAREA"\
@@ -207,7 +207,7 @@
 
 static ble_gap_adv_params_t m_adv_params;                                 /**< Parameters to be passed to the stack when starting advertising. */
 static ble_fat_t            m_ble_fat;
-const static uint8_t *      m_page_data = (const uint8_t*) STATIC_PAGE; //{STATIC_BORING_WEBPAGE};
+static uint8_t *            m_page_data = (uint8_t *) STATIC_PAGE; //{STATIC_BORING_WEBPAGE};
 static uint16_t             m_conn_handle = BLE_CONN_HANDLE_INVALID;
 static int16_t              m_last_data_pos = 0;
 
@@ -229,7 +229,7 @@ static void fat_read_evt_handler(ble_fat_t* p_fat, uint16_t value_handle)
     ble_gatts_rw_authorize_reply_params_t reply;
 
     uint8_t value_buffer[FAT_CHAR_MAX_LEN] = {0};
-    uint16_t page_size = strlen(m_page_data);
+    uint16_t page_size = strlen((char *)m_page_data);
     
     if (page_size > 10000) {
         page_size = 10000;      // Imposing an arbitrary limit on page size.

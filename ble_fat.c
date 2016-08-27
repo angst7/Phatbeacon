@@ -1,3 +1,9 @@
+/*
+    ble_fat.c
+
+    This is the Eddystone Fatbeacon service and characteristic setup.
+*/
+
 #include "ble_fat.h"
 #include <string.h>
 #include "endian_convert.h"
@@ -86,13 +92,7 @@ static uint32_t fat_url_char_add(ble_fat_t * p_fat, const ble_fat_init_t * p_fat
     ble_gatts_char_md_t char_md;
     ble_gatts_attr_t    attr_char_value;
     ble_uuid_t          ble_uuid;
-    ble_gatts_attr_md_t cccd_md;
     ble_gatts_attr_md_t attr_md;
-
-    memset(&cccd_md, 0, sizeof(cccd_md));
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cccd_md.read_perm);
-	BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&cccd_md.write_perm);
-	cccd_md.vloc       = BLE_GATTS_VLOC_STACK;
 
     memset(&char_md, 0, sizeof(char_md));
 
@@ -100,7 +100,7 @@ static uint32_t fat_url_char_add(ble_fat_t * p_fat, const ble_fat_init_t * p_fat
     char_md.p_char_user_desc         = NULL;
     char_md.p_char_pf                = NULL;
     char_md.p_user_desc_md           = NULL;
-    char_md.p_cccd_md                = NULL; // &cccd_md;
+    char_md.p_cccd_md                = NULL; 
     char_md.p_sccd_md                = NULL;
 
     ble_uuid.type = p_fat->char_uuid_type;
@@ -112,21 +112,17 @@ static uint32_t fat_url_char_add(ble_fat_t * p_fat, const ble_fat_init_t * p_fat
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&attr_md.write_perm);
 
     attr_md.vloc    = BLE_GATTS_VLOC_STACK;
-    attr_md.rd_auth = 1;
+    attr_md.rd_auth = 1;        // Force the firmware to use our read handler
     attr_md.wr_auth = 0;
-    attr_md.vlen    = 1;
+    attr_md.vlen    = 1;        // Enable variable length attribute values
 
     memset(&attr_char_value, 0, sizeof(attr_char_value));
-
-    //Eddystone spec requires big endian
-    //ble_fat_brdcst_cap_t temp = p_fat_init->p_init_vals->brdcst_cap;
-    //temp.supp_frame_types = BYTES_SWAP_16BIT(temp.supp_frame_types);
 
     attr_char_value.p_uuid    = &ble_uuid;
     attr_char_value.p_attr_md = &attr_md;
     attr_char_value.init_len  = 1;
     attr_char_value.init_offs = 0;
-    attr_char_value.p_value   = p_fat->val_data; //(uint8_t *)(&temp);
+    attr_char_value.p_value   = p_fat->val_data;    // Not Used in this implementation.
     attr_char_value.max_len   = 20;
 
     return sd_ble_gatts_characteristic_add(p_fat->service_handle,
