@@ -114,7 +114,7 @@ static uint32_t fat_url_char_add(ble_fat_t * p_fat, const ble_fat_init_t * p_fat
     attr_md.vloc    = BLE_GATTS_VLOC_STACK;
     attr_md.rd_auth = 1;
     attr_md.wr_auth = 0;
-    attr_md.vlen    = 0;
+    attr_md.vlen    = 1;
 
     memset(&attr_char_value, 0, sizeof(attr_char_value));
 
