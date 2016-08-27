@@ -32,7 +32,6 @@
 
 #include "ble_fat.h"
 #include <string.h>
-#include "endian_convert.h"
 #include "SEGGER_RTT.h"
 
 
