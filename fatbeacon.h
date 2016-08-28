@@ -27,61 +27,34 @@
                                         'g', 'h', 't' 
 */
 
-// A smaller static webpage (about 3kB, load time is 5-10 seconds)
+// A smaller static webpage (about 2kB, load time is 4-5 seconds)
 #define STATIC_PAGE         "<html><head><meta charset=\"utf-8\"><title>"\
                             "I'm a Fatbeacon</title><style>"\
-                            "html{color:#222;font-size:1em;line-height:1.4}::"\
-                            "selection{background:#b3d4fc;text-shadow:none}hr"\
-                            "{display:block;height:1px;border:0;border-top:1px"\
-                            " solid #ccc;margin:1em 0;padding:0}audio,canvas,"\
-                            "iframe,img,svg,video{vertical-align:middle}"\
-                            "fieldset{border:0;margin:0;padding:0}textarea"\
-                            "{resize:vertical}.browserupgrade{margin:0.2em"\
-                            " 0;background:#ccc;color:#000;padding:0.2em 0}"\
-                            "body{font-family:\"Lucida Grande\", Verdana, Ar"\
-                            "ial, sans-serif;color:#222222;width:500px;mar"\
-                            "gin-left:auto;margin-right:auto}h1{color:#669"\
-                            "9FF;text-align:center;font-size:110%}article{"\
-                            "padding:5px;margin-top:5px;color:cornflowerbl"\
-                            "ue}header{height:150px;text-align:left;color:"\
-                            "cornflowerblue;background-repeat:no-repeat;ba"\
-                            "ckground-position:center}header h1{padding:20"\
-                            " px 0px 0px 10px;margin:0px;font-family:'Asap'"\
-                            ", sans-serif;font-weight:normal;color:white;t"\
-                            "ext-align:center;background:rgba(20, 20, 20, "\
-                            ".2);font-size:240%}header h2{padding:0px 0px "\
-                            "10px 10px;margin:0px;font-family:'Asap', sans"\
-                            "-serif;font-weight:normal;text-align:center;c"\
-                            "olor:whitesmoke;background:rgba(20, 20, 20, ."\
-                            "2);font-size:150%}aside{margin-top:5px;paddin"\
-                            "g:5px;text-align:left;font-style:italic;borde"\
-                            "r:1px #b200ff}section{padding:5px;margin-top:"\
-                            "5px;background-color:whitesmoke}footer{font-s"\
-                            "ize:80%;color:#999999;padding:5px;text-align:"\
-                            "center;font-weight:bold;clear:both}nav{text-a"\
-                            "lign:center}ul li{padding:0px 5px 0px 5px;tex"\
-                            "t-align:left;font-size:90%;font-weight:bold}p"\
-                            "{font-size:80%;padding:2px 10px 2px 5px}img{p"\
-                            "adding:10px 5px 5px 15px}.balanced{width:50%}"\
-                            ".table{display:block;width:auto;border-collap"\
-                            "se:separate;border-spacing:10px}.card{padding"\
-                            ":2px;border-radius:2px;background-color:white"\
-                            ";box-shadow:1px 1px 2px #999999;display:block"\
-                            ";width:100%}@media (min-width: 1000px) and (m"\
-                            "ax-width: 1599px){body{width:600px}}@media (mi"\
-                            "n-width: 800px) and (max-width: 999px){body{wi"\
-                            "dth:500px}}.hidden{display:none !important}."\
-                            "visuallyhidden{border:0;clip:rect(0 0 0 0);he"\
-                            "ight:1px;margin:-1px;overflow:hidden;padding:"\
-                            "0;position:absolute;width:1px}.visuallyhidden"\
-                            ".focusable:active,.visuallyhidden.focusable:f"\
-                            "ocus{clip:auto;height:auto;margin:0;overflow:"\
-                            "visible;position:static;width:auto}.invisible"\
-                            "{visibility:hidden}.clearfix:before,.clearfix"\
-                            ":after{content:\" \";display:table}.clearfix:af"\
-                            "ter{clear:both}"\
-                            "</style></head><body><header><h1>Welcome to"\
-                            " Fatbeacon</h1><h2>No internet? no problem!</h2>"\
+                            "body{margin:0;padding:0;font-family:sans-serif"\
+                            ";color:#444;background:#f5f5f5}header{display"\
+                            ":flex;background:#EF6C00;height:100px}.card{ba"\
+                            "ckground:#fff;padding:20px;margin:30px;"\
+                            "border:1px solid #ccc;box-shadow:0px 0p"\
+                            "x 5px #aaa}p{font-size:1em}a{color:#3F82C4}h1"\
+                            "{margin:35px 10px;display:inline-block"\
+                            ";font-size:1.2em;color:#fff}footer{text-align:"\
+                            "center;font-size:.7em;color:#777}svg{margin-left"\
+                            ":30px;display:inline-block;width:40px}"\
+                            "</style></head><body><header>"\
+                            "<svg viewBox=\"0 0 171 202\"><g fill=\"#fff\"><path "\
+                            "d=\"M141.2 85.3c0-31-25-56-56-56-30.7 0-55.8 25-5"\
+                            "5.8 56 0 17 7.8 32.5 20 42.8l10-10c-9.8-7.6-16-1"\
+                            "9.4-16-32.7 0-23.2 18.8-42 42-42 23 0 41.8 18.8 "\
+                            "41.8 42 0 13.3-6.2 25-16 32.8l10 10c12.2-10.2 20"\
+                            "-25.6 20-42.7\"/><path d=\"M14 85.3C14 46 46 14 85"\
+                            ".3 14s71.3 32 71.3 71.3c0 21.4-9.5 40.6-24.5 53."\
+                            "7l10 10c17.6-15.7 28.6-38.4 28.6-63.7 0-47-38.2-"\
+                            "85.3-85.3-85.3C38.3 0 0 38.2 0 85.3c0 25.3 11 48 "\
+                            "28.5 63.6l10-10C23.5 126 14 106.7 14 85.3\"/>"\
+                            "<path d=\"M89.2 200.3c-2 2-5.5 2-7.6 0l-35.8-35.8c"\
+                            "-2-2-2-5.5 0-7.6l35.8-36c2-2 5.5-2 7.6 0l35.8 36c"\
+                            "2 2 2 5.4 0 7.5l-35.8 35.8z\"/></g></svg>"\
+                            "<h1>Welcome to Fatbeacon</h1>"\
                             "</header><section class=\"table\"><div class"\
                             "=\"card\"><b>What is Fatbeacon?</b><p>Fatbeacon"\
                             " is an experimental type of Physical Web beacon "\
