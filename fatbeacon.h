@@ -28,6 +28,7 @@
 */
 
 // A smaller static webpage (about 2kB, load time is 4-5 seconds)
+/*
 #define STATIC_PAGE         "<html><head><meta charset=\"utf-8\"><title>"\
                             "I'm a Fatbeacon</title><style>"\
                             "body{margin:0;padding:0;font-family:sans-serif"\
@@ -62,14 +63,14 @@
                             " no internet connectivity is available.</p></div>"\
                             "</section><footer><hr />Fatbeacon powered!</footer>"\
                             "</body></html>"\
-
+*/
 /* Static web page.  You can put any single-page html/css/js you like here.  By default this
  * returns a short blurb about the eddystone lighthouse (this is from Wikipedia so if you use it
  * make sure to provide attribution).   
  *
  * Note: This is about 8kB, so it can take 30 seconds or so to load!
 */
-/*
+
 #define STATIC_PAGE           "<html><head><title>The Eddystone Lighthouse</title></head><body>"\
                               "<h1>The Eddystone Lighthouse (from Wikipedia)</h1>"\
                               "<p>The Eddystone Lighthouse is on the dangerous Eddystone Rocks"\
@@ -194,5 +195,5 @@
                               " Winstanley's release with the words &quot;France is at war with England,"\
                               " not with humanity&quot;.</p>"\
                               "</body></html>"
-*/
+
 #endif

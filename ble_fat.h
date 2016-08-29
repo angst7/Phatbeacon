@@ -12,6 +12,8 @@
 #define BLE_UUID_FAT_URL_CHAR       0x17F0
 
 #define FAT_CHAR_MAX_LEN            (20)
+#define FAT_MAX_CHARS               (20)    // Up to 10kB page, 500 bytes per characteristic
+#define FAT_MAX_CHAR_SIZE           (500)
 
 /*Forward Declaration of of ble_fat_t type*/
 typedef struct ble_fat_s ble_fat_t;
@@ -37,7 +39,8 @@ struct ble_fat_s
     uint8_t                         uuid_type;                    /**< UUID type for Fatbeacon URL Service Base UUID. */
     uint8_t                         char_uuid_type;               /**< UUID type for Fatbeacon URL Characteristic Base UUID. */
     uint16_t                        service_handle;               /**< Handle of fatbeacon url Service  */
-    ble_gatts_char_handles_t        fat_url_handles;              /**< Handles related to the fatbeacon_url characteristic */
+    ble_gatts_char_handles_t        fat_url_handles;              /**< Holds the primary FATbeacon characteristic */
+    ble_gatts_char_handles_t        fat_url_part_handles[FAT_MAX_CHARS]; /**< to fatbeacon_url page characteristics */
     uint16_t                        conn_handle;                  /**< Handle of the current connection (as provided by the S132 SoftDevice). BLE_CONN_HANDLE_INVALID if not in a connection. */    
     ble_fat_read_evt_handler_t      read_evt_handler;             /**< Event handler to be called for handling read attempts. */
     uint8_t*                        val_data;

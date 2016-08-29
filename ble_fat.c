@@ -34,6 +34,7 @@
 #include <string.h>
 #include "SEGGER_RTT.h"
 
+static uint8_t m_page_content[10000] = {0};
 
 /**@brief Function for handling the @ref BLE_GAP_EVT_CONNECTED event from the S132 SoftDevice.
  *
@@ -114,10 +115,21 @@ void ble_fat_on_ble_evt(ble_fat_t * p_fat, ble_evt_t * p_ble_evt)
  
 static uint32_t fat_url_char_add(ble_fat_t * p_fat, const ble_fat_init_t * p_fat_init)
 {
+    uint32_t            err_code = NRF_SUCCESS;
     ble_gatts_char_md_t char_md;
     ble_gatts_attr_t    attr_char_value;
     ble_uuid_t          ble_uuid;
     ble_gatts_attr_md_t attr_md;
+
+    uint32_t            page_size = strlen((char *)p_fat_init->val_data);
+    uint8_t             chars_added = 0;
+    static uint8_t      total_chars = 0;
+    uint16_t            char_len = 0;
+
+    total_chars = (page_size / FAT_MAX_CHAR_SIZE) + 
+                                      (page_size % FAT_MAX_CHAR_SIZE > 0 ? 1 : 0);
+
+    memcpy(m_page_content, p_fat_init->val_data, page_size);
 
     memset(&char_md, 0, sizeof(char_md));
 
@@ -137,23 +149,58 @@ static uint32_t fat_url_char_add(ble_fat_t * p_fat, const ble_fat_init_t * p_fat
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&attr_md.write_perm);
 
     attr_md.vloc    = BLE_GATTS_VLOC_STACK;
-    attr_md.rd_auth = 1;        // Force the firmware to use our read handler
+    attr_md.rd_auth = 0;        // No read authorization required
     attr_md.wr_auth = 0;
-    attr_md.vlen    = 1;        // Enable variable length attribute values
+    attr_md.vlen    = 0;        // fixed length
 
     memset(&attr_char_value, 0, sizeof(attr_char_value));
 
     attr_char_value.p_uuid    = &ble_uuid;
     attr_char_value.p_attr_md = &attr_md;
-    attr_char_value.init_len  = 1;
+    attr_char_value.init_len  = sizeof(total_chars);
     attr_char_value.init_offs = 0;
-    attr_char_value.p_value   = p_fat->val_data;    // Not Used in this implementation.
-    attr_char_value.max_len   = 20;
+    attr_char_value.p_value   = &total_chars;    // Number of subsequent characteristics to read
+    attr_char_value.max_len   = sizeof(total_chars);
 
-    return sd_ble_gatts_characteristic_add(p_fat->service_handle,
+    err_code = sd_ble_gatts_characteristic_add(p_fat->service_handle,
                                            &char_md,
                                            &attr_char_value,
                                            &p_fat->fat_url_handles);
+
+    while ((err_code == NRF_SUCCESS) && (chars_added < total_chars)) 
+    {
+        
+        chars_added++;
+
+        // If this is the last characteristic, length is the remainder, otherwise its full size
+        if (chars_added < total_chars) {  
+            char_len = FAT_MAX_CHAR_SIZE;
+        } else {
+            char_len = page_size % FAT_MAX_CHAR_SIZE;
+        }
+
+        ble_uuid.uuid = BLE_UUID_FAT_URL_CHAR+chars_added;
+
+        attr_md.vloc    = BLE_GATTS_VLOC_USER;
+
+        attr_char_value.p_uuid    = &ble_uuid;
+        attr_char_value.p_attr_md = &attr_md;
+        attr_char_value.init_len  = char_len;
+        attr_char_value.init_offs = 0;        
+        attr_char_value.p_value   = m_page_content + ((chars_added-1) * FAT_MAX_CHAR_SIZE);
+        attr_char_value.max_len   = char_len;
+
+        err_code = sd_ble_gatts_characteristic_add(p_fat->service_handle,
+                                           &char_md,
+                                           &attr_char_value,
+                                           &p_fat->fat_url_part_handles[chars_added-1]);
+        if (err_code != NRF_SUCCESS) {
+            SEGGER_RTT_printf(0, "Failed adding characteristic #%d: %d\n", chars_added-1, err_code);
+        }
+
+    }
+
+    return err_code;
 }
 
 
@@ -163,6 +210,8 @@ uint32_t ble_fat_init(ble_fat_t * p_fat, const ble_fat_init_t * p_fat_init)
     ble_uuid_t    ble_uuid;
     ble_uuid128_t fat_base_uuid = FAT_SERVICE_BASE_UUID;
     ble_uuid128_t fat_char_base_uuid = FAT_CHARACTERISTIC_BASE_UUID;
+
+    memset(p_fat, 0, sizeof(p_fat));
 
     // Initialize the service structure.
     p_fat->conn_handle                        = BLE_CONN_HANDLE_INVALID;
