@@ -7,11 +7,11 @@ I've only maintained the GNU Make configuration and its built and tested on the 
 To build it, just update the NRF_SDK_PATH in the Makefile, and go for it.    
 
 Currently supported hardware is:
-nRF52 DK (PCA10040)
-BeaconBuddy
-RuuviTag
-...and probably any hardware for which an nRF BSP header exists
- 
+* nRF52 DK (PCA10040)
+* BeaconBuddy
+* RuuviTag rev.B3
+* ...and probably any hardware for which an nRF BSP header exists
+
 This version is a little rough, far from production, and will probably melt your eyes in addition to any silicon it touches.  You've been warned.
 
 ## License ##
