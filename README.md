@@ -6,6 +6,12 @@ The code is based off the experimental_ble_app_eddystone example that comes with
 I've only maintained the GNU Make configuration and its built and tested on the nRF52 DK, as well as my [BeaconBuddy](https://github.com/angst7/BeaconBuddy) hardware as that's what I use.
 To build it, just update the NRF_SDK_PATH in the Makefile, and go for it.    
 
+Currently supported hardware is:
+nRF52 DK (PCA10040)
+BeaconBuddy
+RuuviTag
+...and probably any hardware for which an nRF BSP header exists
+ 
 This version is a little rough, far from production, and will probably melt your eyes in addition to any silicon it touches.  You've been warned.
 
 ## License ##
