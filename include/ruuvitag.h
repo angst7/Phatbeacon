@@ -22,9 +22,9 @@
 
 #define BUTTONS_NUMBER 1
 
-#define BUTTON_START   15
-#define BUTTON_1       15
-#define BUTTON_STOP    15
+#define BUTTON_START   13
+#define BUTTON_1       13
+#define BUTTON_STOP    13
 #define BUTTON_PULL    NRF_GPIO_PIN_PULLUP
 
 #define BUTTONS_LIST { BUTTON_1 }
